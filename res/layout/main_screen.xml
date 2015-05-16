@@ -43,6 +43,16 @@
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/btnShowTransactionsList"
+            style="@style/ButtonStyle"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Show List of Transactions"
+            android:textStyle="bold">
+        </Button>
+
+        <Button
             android:id="@+id/btnLogout"
             style="@style/ButtonStyle"
             android:layout_marginTop="10dp"

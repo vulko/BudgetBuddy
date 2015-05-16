@@ -1,5 +1,6 @@
 package testtask.avast.budgetbuddy.controller;
 
+import testtask.avast.budgetbuddy.model.BudgetModel;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,6 +11,11 @@ public class AppController {
 	private static final AppController mInstance = new AppController();
 	private AppController() {}
 	public static AppController getInstance() { return mInstance; }
+	
+	
+	// Model
+	private BudgetModel mModel = new BudgetModel();
+	public BudgetModel getBudgetModel() { return mModel; }
 	
 	
 	// Login related
@@ -23,6 +29,7 @@ public class AppController {
 		if (mAct == null || user == null)
 			return false;
 		
+		mUserName = user;
 		SharedPreferences prefs = mAct.getPreferences(Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putString(USERNAME_PREF_KEY, user);

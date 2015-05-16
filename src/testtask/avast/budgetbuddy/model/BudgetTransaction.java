@@ -1,12 +1,46 @@
 package testtask.avast.budgetbuddy.model;
 
-public class BudgetTransaction {
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-	private int id;
+public class BudgetTransaction implements Serializable {
+
+	/**
+	 * Serial version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * This field corresponds to and ID of a DB row
+	 */
+	private transient int id;
+	
+	/**
+	 * A string containing a transaction GUID:
+	 */
 	private String mGUID;
+	
+	/**
+	 * A description of the transaction
+	 */
 	private String mDesc;
+	
+	/**
+	 * A date and time of the transaction defined as the number of milliseconds since 1970
+	 */
 	private long mTimestamp;
+	
+	/**
+	 * An amount of money transferred by the transaction
+	 */
 	private double mAmount;
+	
+	/**
+	 * If TRUE the transaction is deleted. It mustn’t be neither counted into the account
+     * balance nor displayed to the user
+	 */
 	private boolean isDeleted;
 	
 	public BudgetTransaction() {
@@ -20,6 +54,9 @@ public class BudgetTransaction {
 		isDeleted = delete;
 	}
 	
+	/**
+	 * @return ID of a DB row with current transaction
+	 */
 	public int getID() {
 		return id;
 	}
@@ -28,6 +65,9 @@ public class BudgetTransaction {
 		id = _id;
 	}
 
+	/**
+	 * @return A string containing a transaction GUID:
+	 */
 	public String getGUID() {
 		return mGUID;
 	}
@@ -36,6 +76,9 @@ public class BudgetTransaction {
 		this.mGUID = mGUID;
 	}
 
+	/**
+	 * @return A description of the transaction
+	 */
 	public String getDesc() {
 		return mDesc;
 	}
@@ -44,6 +87,9 @@ public class BudgetTransaction {
 		this.mDesc = mDesc;
 	}
 
+	/**
+	 * @return LONG date and time of the transaction defined as the number of milliseconds since 1970
+	 */
 	public long getTimestamp() {
 		return mTimestamp;
 	}
@@ -52,6 +98,9 @@ public class BudgetTransaction {
 		this.mTimestamp = mTimestamp;
 	}
 
+	/**
+	 * @return amount of money transferred by the transaction
+	 */
 	public double getAmount() {
 		return mAmount;
 	}
@@ -60,6 +109,9 @@ public class BudgetTransaction {
 		this.mAmount = mAmount;
 	}
 
+	/**
+	 * @return TRUE if transaction was deleted
+	 */
 	public boolean isDeleted() {
 		return isDeleted;
 	}
@@ -68,9 +120,27 @@ public class BudgetTransaction {
 		this.isDeleted = isDeleted;
 	}
 	
+	/**
+	 * @return amount of money transferred by the transaction
+	 */
 	@Override
 	public String toString() {
 		return String.valueOf(mAmount);	
+	}
+
+	/**
+	 * This is the default implementation of readObject.
+	 */
+	private void readObject(ObjectInputStream inStream) throws ClassNotFoundException, IOException {
+		// always perform the default de-serialization first
+		inStream.defaultReadObject();
+	}
+
+	/**
+	 * This is the default implementation of writeObject.
+	 */
+	private void writeObject(ObjectOutputStream outStream) throws IOException {
+		outStream.defaultWriteObject();
 	}
 
 }

@@ -51,6 +51,6 @@
             <requestFocus />            
         </Button>
 
-        </LinearLayout>
+    </LinearLayout>
 
 </RelativeLayout>

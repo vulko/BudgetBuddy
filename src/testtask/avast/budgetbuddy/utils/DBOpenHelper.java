@@ -29,6 +29,10 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 	
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		clearDatabase(db);
+	}
+	
+	public void clearDatabase(SQLiteDatabase db) {
 		db.execSQL("DROP TABLE IF EXISTS " + TransactionDBController.TABLE_NAME);
 		onCreate(db);
 	}

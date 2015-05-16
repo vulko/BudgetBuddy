@@ -2,22 +2,27 @@ package testtask.avast.budgetbuddy.Screens;
 
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
-import android.support.v4.app.LoaderManager;
+import android.support.v4.app.*;
 import android.support.v4.content.Loader;
-import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.ResourceCursorAdapter;
+import android.text.InputType;
 import testtask.avast.budgetbuddy.R;
+import testtask.avast.budgetbuddy.controller.AppController;
 import testtask.avast.budgetbuddy.controller.TransactionDBController;
-import testtask.avast.budgetbuddy.controller.TransactionsDataLoader;
 import testtask.avast.budgetbuddy.model.BudgetTransaction;
 import testtask.avast.budgetbuddy.model.TransactionCursorLoader;
 import testtask.avast.budgetbuddy.utils.DBOpenHelper;
@@ -25,8 +30,10 @@ import testtask.avast.budgetbuddy.utils.DBOpenHelper;
 public class TransactionsListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
 	private static final String TAG = "TransactionsListFragment";
-	private static final int LOADER_ID = 0;
-	private static final String SQL_LITE_READ_STATEMENT = "SELECT " + TransactionDBController.COLUMN_ID
+	private static final int LOADER_ID = 1;
+    static final int INTERNAL_EMPTY_ID = 16711681;
+    static final int INTERNAL_LIST_CONTAINER_ID = 16711683;
+    private static final String SQL_LITE_READ_STATEMENT = "SELECT " + TransactionDBController.COLUMN_ID
 			+ ", " + TransactionDBController.COLUMN_GUID
 			+ ", " + TransactionDBController.COLUMN_DESC
 			+ ", " + TransactionDBController.COLUMN_TIMESTAMP
@@ -41,18 +48,34 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 	private TransactionCursorLoader mLoader = null;
 	
 	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	    View view = inflater.inflate(R.layout.transaction_list_screen, container, false);
+        view.findViewById(R.id.list_container_id).setId(INTERNAL_LIST_CONTAINER_ID);
+	    
+	    return view;
+	}
+	
+	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+
+        getView().findViewById(R.id.btnAddTransaction).setOnClickListener(new View.OnClickListener() {
 			
+			@Override
+			public void onClick(View v) {
+			}
+		});
+		
+
 		mDBHelper = new DBOpenHelper(getActivity());
 		mDatabase = mDBHelper.getWritableDatabase();
+		//mDBHelper.clearDatabase(mDatabase);
 		mDBController = new TransactionDBController(mDatabase);
-		mAdapter = new ClientCursorAdapter(getActivity(), R.layout.row, null, 0 );
-
+		mAdapter = new ClientCursorAdapter(getActivity(), R.layout.transaction_list_row, null, 0 );
 		setListAdapter(mAdapter);
-		setListShown(false);
+		//setListShown(false);
 		
-		List<BudgetTransaction> list = mDBController.read();
+/*		List<BudgetTransaction> list = mDBController.read();
 		if(list == null || list.size() == 0){
 			mDBController.insert(new BudgetTransaction("", "", 0, 100, false));
 			mDBController.insert(new BudgetTransaction("", "", 0, 200, false));
@@ -60,8 +83,7 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 			mDBController.insert(new BudgetTransaction("", "", 0, 400, false));
 			mDBController.insert(new BudgetTransaction("", "", 0, 500, false));
 		}
-
-		getLoaderManager().initLoader(LOADER_ID, null, this);
+*/
 	}
 	
 	@Override
@@ -77,7 +99,7 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 	    mAdapter.changeCursor(cursor);
 
 		if (isResumed()) {
-			setListShown(true);
+			//setListShown(true);
 		} else {
 			setListShownNoAnimation(true);
 		}  
@@ -86,6 +108,15 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 	@Override
 	public void onLoaderReset(Loader<Cursor> arg0) {
 		mAdapter.changeCursor(null);;		
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();		
+	
+		// TODO: instead of restarting loader every time switch to a Notifier-Listener pattern
+		//       when data has been changed then restart, otherwise init 
+		getLoaderManager().restartLoader(LOADER_ID, null, this);
 	}
 	
 	@Override
@@ -107,11 +138,69 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 
 		@Override
 		public void bindView(View view, Context context, Cursor cursor) {
-			TextView id = (TextView) view.findViewById(R.id.title);
-			id.setText(String.valueOf( cursor.getInt(cursor.getColumnIndex(TransactionDBController.COLUMN_ID)) ));
+			final int id = cursor.getInt(cursor.getColumnIndex(TransactionDBController.COLUMN_ID));
 
-			TextView value = (TextView) view.findViewById(R.id.value);
-			value.setText(cursor.getString(cursor.getColumnIndex(TransactionDBController.COLUMN_VALUE)));
+			TextView value = (TextView) view.findViewById(R.id.amount);
+			value.setText(String.valueOf( cursor.getDouble(cursor.getColumnIndex(TransactionDBController.COLUMN_VALUE)) ));
+			
+			Button btnEdit = (Button) view.findViewById(R.id.btnEditTransaction);
+			btnEdit.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					AlertDialog dialog;
+					final EditText newValueEdit = new EditText(getActivity());
+					newValueEdit.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+					builder.setMessage("Set new value").setTitle("Edit transaction");
+					builder.setView(newValueEdit);
+					builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							try {
+								AppController.getInstance().getBudgetModel().getTransaction(id)
+										.setAmount( Double.valueOf( newValueEdit.getText().toString() ) );								
+							} catch (NumberFormatException e) {
+								// TODO: handle incorrect input
+								Toast.makeText(getActivity(), "Incorrect input type", Toast.LENGTH_LONG).show();
+							}
+							getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
+						}
+					});
+					builder.setNegativeButton("no", new DialogInterface.OnClickListener() {					
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+						}
+					});
+					dialog = builder.create();
+					dialog.show();					
+				}
+			});
+
+			Button btnRemove = (Button) view.findViewById(R.id.btnRemoveTransaction);
+			btnRemove.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					AlertDialog dialog;
+					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+					builder.setMessage("Are you sure?").setTitle("Deleting transaction");
+					builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// remove item
+						}
+					});
+					builder.setNegativeButton("no", new DialogInterface.OnClickListener() {					
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// maybe there's no need to handle it...
+						}
+					});
+					dialog = builder.create();
+					dialog.show();
+				}
+			});
 		}
 		
 	}
