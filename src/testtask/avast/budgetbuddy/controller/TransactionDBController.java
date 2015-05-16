@@ -15,7 +15,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 	public static final String COLUMN_GUID = "guid";
 	public static final String COLUMN_DESC = "desc";
 	public static final String COLUMN_TIMESTAMP = "timestamp";
-	public static final String COLUMN_AMOUNT = "amount";
+	public static final String COLUMN_VALUE = "amount";
 	public static final String COLUMN_DELETED = "deleted";
 
 	public TransactionDBController(SQLiteDatabase database) {
@@ -83,7 +83,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 	}
 
 	public String[] getAllColumns() {
-		return new String[] { COLUMN_ID, COLUMN_GUID, COLUMN_DESC, COLUMN_TIMESTAMP, COLUMN_AMOUNT, COLUMN_DELETED };
+		return new String[] { COLUMN_ID, COLUMN_GUID, COLUMN_DESC, COLUMN_TIMESTAMP, COLUMN_VALUE, COLUMN_DELETED };
 	}
 
 	public BudgetTransaction getBudgetTransaction(Cursor cursor) {
@@ -95,7 +95,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 		transaction.setGUID( cursor.getString(cursor.getColumnIndex(COLUMN_GUID)) );
 		transaction.setDesc( cursor.getString(cursor.getColumnIndex(COLUMN_DESC)) );
 		transaction.setTimestamp( cursor.getLong(cursor.getColumnIndex(COLUMN_TIMESTAMP)) );
-		transaction.setAmount( cursor.getDouble(cursor.getColumnIndex(COLUMN_AMOUNT)) );
+		transaction.setAmount( cursor.getDouble(cursor.getColumnIndex(COLUMN_VALUE)) );
 		transaction.setDeleted( cursor.getInt(cursor.getColumnIndex(COLUMN_DELETED)) > 0 );
 		
 		return transaction;
@@ -109,7 +109,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 		values.put(COLUMN_GUID, obj.getGUID());
 		values.put(COLUMN_DESC, obj.getDesc());
 		values.put(COLUMN_TIMESTAMP, obj.getTimestamp());
-		values.put(COLUMN_AMOUNT, obj.getAmount());
+		values.put(COLUMN_VALUE, obj.getAmount());
 		values.put(COLUMN_DELETED, obj.isDeleted());
 		return values;
 	}
