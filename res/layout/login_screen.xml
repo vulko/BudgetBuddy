@@ -1,0 +1,56 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/PurpleLayoutStyle"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="50dp"
+    android:paddingRight="50dp"
+    android:gravity="center"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <TextView
+            style="@style/FixedTextStyle"
+            android:padding="5dp"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hi, I'm BudgetBuddy" />
+        <TextView
+            style="@style/FixedTextStyle"
+            android:padding="5dp"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="What is your name?" />
+
+        <EditText
+            android:id="@+id/etPersonName"
+            style="@style/EditTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapWords"
+            android:singleLine="true"
+            android:text=""
+            android:hint="enter your name here"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnLogin"
+            style="@style/ButtonStyle"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Proceed"
+            android:textStyle="bold">
+            <requestFocus />            
+        </Button>
+
+        </LinearLayout>
+
+</RelativeLayout>

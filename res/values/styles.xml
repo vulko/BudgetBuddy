@@ -1,0 +1,57 @@
+<resources>
+       
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <style name="AppBaseTheme" parent="android:style/Theme.NoTitleBar">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+        -->
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style>
+
+    <style name="PurpleLayoutStyle">
+        <item name="android:background">@drawable/screen_background</item>
+        <item name="android:gravity">top|center_horizontal</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingLeft">10dp</item>
+    </style>
+    
+    <style name="FixedTextStyle" parent="android:style/Widget.TextView">
+        <item name="android:padding">0dp</item>
+        <item name="android:spacing">0dp</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+    
+    <style name="EditTextStyle" parent="android:style/Widget.EditText">
+        <item name="android:background">@drawable/textedit_background</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:spacing">0dp</item>
+        <item name="android:textColor">@color/dark_purple</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="ButtonStyle" parent="android:style/Widget.Button">
+        <item name="android:textSize">24sp</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:spacing">0dp</item>
+        <item name="android:textColor">@color/light_gray</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/btn_backgound</item>
+    </style>    
+        
+</resources>
