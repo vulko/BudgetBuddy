@@ -62,6 +62,16 @@
             android:textStyle="bold">
         </Button>
 
+        <Button
+            android:id="@+id/btnResetDBandInit"
+            style="@style/ButtonStyle"
+            android:layout_marginTop="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="reset DB + init with items"
+            android:textStyle="bold">
+        </Button>
+        
         </LinearLayout>
 
 </RelativeLayout>

@@ -16,7 +16,8 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 			+ TransactionDBController.COLUMN_DESC + " text not null, " 
 			+ TransactionDBController.COLUMN_TIMESTAMP + " int, " 
 			+ TransactionDBController.COLUMN_VALUE + " real, " 
-			+ TransactionDBController.COLUMN_DELETED + " int" + ");";
+			+ TransactionDBController.COLUMN_DELETED + " int, " 
+			+ TransactionDBController.COLUMN_SYNCED + " int" + ");";
 	
 	public DBOpenHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);

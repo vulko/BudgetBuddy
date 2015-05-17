@@ -1,9 +1,12 @@
 package testtask.avast.budgetbuddy.controller;
 
+import testtask.avast.budgetbuddy.SyncManager.BackendSyncManager;
 import testtask.avast.budgetbuddy.model.BudgetModel;
+import testtask.avast.budgetbuddy.model.UsernameChangedListener;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 
 public class AppController {
 
@@ -14,8 +17,17 @@ public class AppController {
 	
 	
 	// Model
+	// TODO: after switching to CursorLoader for a ListFragment with transactions,
+	//       this model is not that important. Should be refactored, which
+	//       will require to change app architecture as well
 	private BudgetModel mModel = new BudgetModel();
 	public BudgetModel getBudgetModel() { return mModel; }
+	
+	
+	// Sync manager
+	public BackendSyncManager createSyncManager(SQLiteDatabase db) {
+		return new BackendSyncManager(db);
+	}
 	
 	
 	// Login related
@@ -24,12 +36,15 @@ public class AppController {
 	private String mUserName = null;
 	private String mUUID = null;
 	private final String USERNAME_PREF_KEY = "user";
+	private UsernameChangedListener mListener = null;
 	
 	public boolean loginUser(Activity mAct, String user) {
 		if (mAct == null || user == null)
 			return false;
 		
 		mUserName = user;
+		// notify that user logged in
+		mListener.onUsernameChanged();
 		SharedPreferences prefs = mAct.getPreferences(Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putString(USERNAME_PREF_KEY, user);
@@ -56,6 +71,8 @@ public class AppController {
 		
 		return mUserName;
 	}
+	
+	public void setUsernameChangedListener(UsernameChangedListener listener) { mListener = listener; }
 	
 	
 }

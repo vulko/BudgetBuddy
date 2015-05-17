@@ -116,21 +116,10 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 
 		mDBHelper = new DBOpenHelper(getActivity());
 		mDatabase = mDBHelper.getWritableDatabase();
-		//mDBHelper.clearDatabase(mDatabase);
 		mDBController = new TransactionDBController(mDatabase);
 		mAdapter = new ClientCursorAdapter(getActivity(), R.layout.transaction_list_row, null, 0 );
 		setListAdapter(mAdapter);
 		//setListShown(false);
-		
-/*		List<BudgetTransaction> list = mDBController.read();
-		if(list == null || list.size() == 0){
-			mDBController.insert(new BudgetTransaction("", "", 0, 100, false));
-			mDBController.insert(new BudgetTransaction("", "", 0, 200, false));
-			mDBController.insert(new BudgetTransaction("", "", 0, 300, false));
-			mDBController.insert(new BudgetTransaction("", "", 0, 400, false));
-			mDBController.insert(new BudgetTransaction("", "", 0, 500, false));
-		}
-*/
 	}
 	
 	@Override

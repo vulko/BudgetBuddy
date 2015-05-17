@@ -4,13 +4,18 @@ import testtask.avast.budgetbuddy.utils.DBOpenHelper;
 import testtask.avast.budgetbuddy.model.BalanceUpdateListener;
 import testtask.avast.budgetbuddy.model.BudgetModel;
 import testtask.avast.budgetbuddy.model.BudgetTransaction;
+import testtask.avast.budgetbuddy.model.UsernameChangedListener;
 import testtask.avast.budgetbuddy.Screens.LoginFragment;
 import testtask.avast.budgetbuddy.Screens.TransactionsListFragment;
+import testtask.avast.budgetbuddy.Screens.TransactionsListFragment.ClientCursorAdapter;
+import testtask.avast.budgetbuddy.SyncManager.BackendSyncManager;
 import testtask.avast.budgetbuddy.controller.AppController;
 import testtask.avast.budgetbuddy.controller.TransactionDBController;
 import testtask.avast.budgetbuddy.controller.TransactionsDataLoader;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+
+import java.util.Date;
 import java.util.List;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -23,7 +28,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 
-public class BudgetBuddyActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks< List<BudgetTransaction> >, BalanceUpdateListener {
+public class BudgetBuddyActivity extends FragmentActivity implements
+												LoaderManager.LoaderCallbacks< List<BudgetTransaction> >,
+												BalanceUpdateListener {
 
 	public static final int LOADER_ID = 0;
 	private SQLiteDatabase mDatabase = null;
@@ -38,14 +45,17 @@ public class BudgetBuddyActivity extends FragmentActivity implements LoaderManag
         if (AppController.getInstance().getUserName(this) == null) { // if user didn't login yet or logged out
         	showLoginScreen();
         } 
-        // temporary!
-        else {
-        }
         
         setContentView(R.layout.main_screen);
         
         etBalance = (EditText) findViewById(R.id.etBalance);
         final TextView tvHello = (TextView) findViewById(R.id.tvPersonName);
+        AppController.getInstance().setUsernameChangedListener(new UsernameChangedListener() {		
+			@Override
+			public void onUsernameChanged() { // change hello text when user logs in
+				tvHello.setText("Hello " + AppController.getInstance().getUserName(BudgetBuddyActivity.this));
+			}
+		});
         tvHello.setText("Hello " + AppController.getInstance().getUserName(this));
         final Button btnLogout = (Button) findViewById(R.id.btnLogout);
         btnLogout.setOnClickListener(new View.OnClickListener() {
@@ -65,6 +75,15 @@ public class BudgetBuddyActivity extends FragmentActivity implements LoaderManag
 				showTransactionListScreen();
 			}
 		});
+
+        final Button btnResetDBandInit = (Button) findViewById(R.id.btnResetDBandInit);
+        btnResetDBandInit.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				resetDBandInit();	
+			}
+		});
     }
     
     @Override
@@ -82,10 +101,13 @@ public class BudgetBuddyActivity extends FragmentActivity implements LoaderManag
     public void onResume() {
     	super.onResume();
     	
-		etBalance.setText( "_" );
+ 		etBalance.setText( "_" );
 		// TODO: instead of restarting loader every time switch to a Notifier-Listener pattern,
 		//       when data has been changed then restart, otherwise init loader
     	getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+    			
+    	BackendSyncManager syncManager = AppController.getInstance().createSyncManager(mDatabase);
+    	syncManager.execute();
     }
     
     @Override
@@ -144,6 +166,18 @@ public class BudgetBuddyActivity extends FragmentActivity implements LoaderManag
 	@Override
 	public void onBalanceChanged() {
 		etBalance.setText( String.valueOf(AppController.getInstance().getBudgetModel().getBalance()) );
+	}
+	
+	public void resetDBandInit() {
+		mDBHelper.clearDatabase(mDatabase);	
+		List<BudgetTransaction> list = mDBController.read();
+		if(list == null || list.size() == 0){
+			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 100, false, false));
+			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 200, false, false));
+			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 300, false, false));
+			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 400, false, false));
+			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 500, false, false));
+		}		
 	}
     
 }

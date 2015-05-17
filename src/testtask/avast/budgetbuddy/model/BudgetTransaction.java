@@ -1,7 +1,9 @@
 package testtask.avast.budgetbuddy.model;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
@@ -16,6 +18,11 @@ public class BudgetTransaction implements Serializable {
 	 * This field corresponds to and ID of a DB row
 	 */
 	private transient int id;
+	
+	/**
+	 * TRUE if this transaction was isSynced with backend
+	 */
+	private transient boolean isSynced = false;
 	
 	/**
 	 * A string containing a transaction GUID:
@@ -46,12 +53,13 @@ public class BudgetTransaction implements Serializable {
 	public BudgetTransaction() {
 	}
 	
-	public BudgetTransaction(String guid, String desc, long timestamp, double amount, boolean delete) {
+	public BudgetTransaction(String guid, String desc, long timestamp, double amount, boolean delete, boolean synced) {
 		mGUID = guid;
 		mDesc = desc;
 		mTimestamp = timestamp;
 		mAmount = amount;
 		isDeleted = delete;
+		isSynced = synced;
 	}
 	
 	/**
@@ -141,6 +149,45 @@ public class BudgetTransaction implements Serializable {
 	 */
 	private void writeObject(ObjectOutputStream outStream) throws IOException {
 		outStream.defaultWriteObject();
+	}
+
+	/**
+	 * @return returns a serialized object as byte[]
+	 */
+	public byte[] serialize() {
+		ByteArrayOutputStream boStream = new ByteArrayOutputStream();
+		ObjectOutput out = null;
+		try {
+			out = new ObjectOutputStream(boStream);
+			out.writeObject(this);
+		} catch (IOException e) {
+			// TODO: handle or add throws declaration
+		} finally {
+			try {
+				boStream.close();
+				if (out != null)
+					out.close();
+			} catch (IOException ex) {
+				// TODO: handle or add throws declaration
+			}
+		}
+		
+		return boStream.toByteArray();
+	}
+
+	
+	/**
+	 * @return TRUE if this transaction was isSynced with backend
+	 */
+	public boolean isSynced() {
+		return isSynced;
+	}
+
+	/**
+	 * @return sets isSynced flag (for synchronization with backend)
+	 */
+	public void setSynced(boolean synced) {
+		this.isSynced = synced;
 	}
 
 }

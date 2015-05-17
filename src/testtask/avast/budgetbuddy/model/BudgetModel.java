@@ -10,6 +10,8 @@ public class BudgetModel {
 	private Map<Integer, BudgetTransaction> mTransactionsMap = new Hashtable<Integer, BudgetTransaction>();
 	private double currentBalance = 0.0f;
 	
+	public Map<Integer, BudgetTransaction> getMap() { return mTransactionsMap; }
+	
 	public double getBalance() {
 		return currentBalance;
 	}

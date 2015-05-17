@@ -17,6 +17,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 	public static final String COLUMN_TIMESTAMP = "timestamp";
 	public static final String COLUMN_VALUE = "amount";
 	public static final String COLUMN_DELETED = "deleted";
+	public static final String COLUMN_SYNCED = "synced";
 
 	public TransactionDBController(SQLiteDatabase database) {
 		super(database);
@@ -83,7 +84,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 	}
 
 	public String[] getAllColumns() {
-		return new String[] { COLUMN_ID, COLUMN_GUID, COLUMN_DESC, COLUMN_TIMESTAMP, COLUMN_VALUE, COLUMN_DELETED };
+		return new String[] { COLUMN_ID, COLUMN_GUID, COLUMN_DESC, COLUMN_TIMESTAMP, COLUMN_VALUE, COLUMN_DELETED, COLUMN_SYNCED };
 	}
 
 	public BudgetTransaction getBudgetTransaction(Cursor cursor) {
@@ -97,6 +98,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 		transaction.setTimestamp( cursor.getLong(cursor.getColumnIndex(COLUMN_TIMESTAMP)) );
 		transaction.setAmount( cursor.getDouble(cursor.getColumnIndex(COLUMN_VALUE)) );
 		transaction.setDeleted( cursor.getInt(cursor.getColumnIndex(COLUMN_DELETED)) > 0 );
+		transaction.setSynced( cursor.getInt(cursor.getColumnIndex(COLUMN_SYNCED)) > 0 );
 		
 		return transaction;
 	}
@@ -111,6 +113,7 @@ public class TransactionDBController extends AbstractDBController<BudgetTransact
 		values.put(COLUMN_TIMESTAMP, obj.getTimestamp());
 		values.put(COLUMN_VALUE, obj.getAmount());
 		values.put(COLUMN_DELETED, obj.isDeleted());
+		values.put(COLUMN_SYNCED, obj.isSynced());
 		return values;
 	}
 
