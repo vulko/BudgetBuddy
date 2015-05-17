@@ -8,7 +8,7 @@ public class BudgetModel {
 	BalanceUpdateListener listener;
 
 	private Map<Integer, BudgetTransaction> mTransactionsMap = new Hashtable<Integer, BudgetTransaction>();
-	private double currentBalance = 0;
+	private double currentBalance = 0.0f;
 	
 	public double getBalance() {
 		return currentBalance;
@@ -27,6 +27,7 @@ public class BudgetModel {
 	
 	public void clear() {
 		mTransactionsMap.clear();
+		currentBalance = 0.0f;
 	}
 	
 	public void setBalanceUpdateListener(BalanceUpdateListener listener) {

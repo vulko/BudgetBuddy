@@ -1,5 +1,6 @@
 package testtask.avast.budgetbuddy.Screens;
 
+import java.util.Date;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -20,10 +21,15 @@ import android.widget.Toast;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.ResourceCursorAdapter;
 import android.text.InputType;
+import android.text.method.DateTimeKeyListener;
+import testtask.avast.budgetbuddy.BudgetBuddyActivity;
 import testtask.avast.budgetbuddy.R;
+import testtask.avast.budgetbuddy.controller.AbstractDataLoader;
 import testtask.avast.budgetbuddy.controller.AppController;
 import testtask.avast.budgetbuddy.controller.TransactionDBController;
+import testtask.avast.budgetbuddy.controller.TransactionsDataLoader;
 import testtask.avast.budgetbuddy.model.BudgetTransaction;
+import testtask.avast.budgetbuddy.model.DBChangedListener;
 import testtask.avast.budgetbuddy.model.TransactionCursorLoader;
 import testtask.avast.budgetbuddy.utils.DBOpenHelper;
 
@@ -62,7 +68,45 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
         getView().findViewById(R.id.btnAddTransaction).setOnClickListener(new View.OnClickListener() {
 			
 			@Override
-			public void onClick(View v) {
+			public void onClick(View v) { // ON ADD ITEM
+				AlertDialog dialog;
+				final EditText newItemValueEdit = new EditText(getActivity());
+				newItemValueEdit.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setMessage("Set amount value").setTitle("Add new transaction");
+				builder.setView(newItemValueEdit);
+				builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						try {
+							BudgetTransaction transaction = new BudgetTransaction();
+							transaction.setAmount(Double.valueOf( newItemValueEdit.getText().toString() ));
+							transaction.setID(0);
+							transaction.setGUID("");
+							transaction.setDesc("");
+							transaction.setDeleted(false);
+							// init with current time
+							transaction.setTimestamp(new Date().getTime());
+							Loader< List<BudgetTransaction> > loader = getActivity().getSupportLoaderManager()
+									.getLoader(BudgetBuddyActivity.LOADER_ID);
+							TransactionsDataLoader tloader = (TransactionsDataLoader) loader;
+							tloader.insert(transaction, new DBChangedListener() {									
+								@Override
+								public void onDBChanged() {
+									// resfresh loader
+									getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
+									mAdapter.notifyDataSetChanged();
+								}
+							});
+						} catch (NumberFormatException e) {
+							// TODO: handle incorrect input
+							Toast.makeText(getActivity(), "Incorrect input type", Toast.LENGTH_LONG).show();
+						}
+					}
+				});
+				builder.setNegativeButton("no", null);
+				dialog = builder.create();
+				dialog.show();					
 			}
 		});
 		
@@ -107,7 +151,7 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> arg0) {
-		mAdapter.changeCursor(null);;		
+		mAdapter.changeCursor(null);		
 	}
 	
 	@Override
@@ -150,28 +194,38 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 				public void onClick(View v) {
 					AlertDialog dialog;
 					final EditText newValueEdit = new EditText(getActivity());
-					newValueEdit.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+					newValueEdit.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
 					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 					builder.setMessage("Set new value").setTitle("Edit transaction");
 					builder.setView(newValueEdit);
 					builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
 						@Override
-						public void onClick(DialogInterface dialog, int which) {
+						public void onClick(DialogInterface dialog, int which) { // ON EDIT ITEM
+							BudgetTransaction transaction = null;
 							try {
-								AppController.getInstance().getBudgetModel().getTransaction(id)
-										.setAmount( Double.valueOf( newValueEdit.getText().toString() ) );								
+								transaction = AppController.getInstance().getBudgetModel().getTransaction(id);
+								if (transaction != null) {
+									transaction.setAmount( Double.valueOf( newValueEdit.getText().toString() ) );
+									
+									Loader< List<BudgetTransaction> > loader = getActivity().getSupportLoaderManager()
+																		.getLoader(BudgetBuddyActivity.LOADER_ID);
+									TransactionsDataLoader tloader = (TransactionsDataLoader) loader;
+									tloader.update(transaction, new DBChangedListener() {									
+										@Override
+										public void onDBChanged() {
+											// resfresh loader
+											getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
+											mAdapter.notifyDataSetChanged();
+										}
+									});
+								}
 							} catch (NumberFormatException e) {
 								// TODO: handle incorrect input
 								Toast.makeText(getActivity(), "Incorrect input type", Toast.LENGTH_LONG).show();
 							}
-							getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
 						}
 					});
-					builder.setNegativeButton("no", new DialogInterface.OnClickListener() {					
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-						}
-					});
+					builder.setNegativeButton("no", null);
 					dialog = builder.create();
 					dialog.show();					
 				}
@@ -181,22 +235,31 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 			btnRemove.setOnClickListener(new View.OnClickListener() {
 				
 				@Override
-				public void onClick(View v) {
+				public void onClick(View v) { // ON REMOVE ITEM
 					AlertDialog dialog;
 					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 					builder.setMessage("Are you sure?").setTitle("Deleting transaction");
 					builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							// remove item
+							BudgetTransaction transaction = null;
+							transaction = AppController.getInstance().getBudgetModel().getTransaction(id);
+							if (transaction != null) {
+								Loader< List<BudgetTransaction> > loader = getActivity().getSupportLoaderManager()
+																	.getLoader(BudgetBuddyActivity.LOADER_ID);
+								TransactionsDataLoader tloader = (TransactionsDataLoader) loader;
+								tloader.delete(transaction, new DBChangedListener() {									
+									@Override
+									public void onDBChanged() {
+										// resfresh loader
+										getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
+										mAdapter.notifyDataSetChanged();
+									}
+								});
+							}
 						}
 					});
-					builder.setNegativeButton("no", new DialogInterface.OnClickListener() {					
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							// maybe there's no need to handle it...
-						}
-					});
+					builder.setNegativeButton("no", null);
 					dialog = builder.create();
 					dialog.show();
 				}

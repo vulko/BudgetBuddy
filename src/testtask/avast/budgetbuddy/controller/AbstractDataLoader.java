@@ -42,6 +42,7 @@ public abstract class AbstractDataLoader<E extends List<?>> extends	AsyncTaskLoa
 			super.deliverResult(dataList);
 		}
 		
+		// release data from previous load
 		if (oldDataList != null
 				&& oldDataList != dataList
 				&& oldDataList.size() > 0) {

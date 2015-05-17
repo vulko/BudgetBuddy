@@ -5,6 +5,7 @@ import java.util.List;
 import android.content.Context;
 
 import testtask.avast.budgetbuddy.model.BudgetTransaction;
+import testtask.avast.budgetbuddy.model.DBChangedListener;
 
 public class TransactionsDataLoader extends AbstractDataLoader< List<BudgetTransaction> > {
 	
@@ -33,30 +34,45 @@ public class TransactionsDataLoader extends AbstractDataLoader< List<BudgetTrans
 		return transactionsList;
 	}
 
-	public void insert(BudgetTransaction obj) {
-		new InsertTask(this).execute(obj);
+	public void insert(BudgetTransaction obj, DBChangedListener listener) {
+		new InsertTask(this, listener).execute(obj);
 	}
 
-	public void update(BudgetTransaction obj) {
-		new UpdateTask(this).execute(obj);
+	public void update(BudgetTransaction obj, DBChangedListener listener) {
+		new UpdateTask(this, listener).execute(obj);
 	}
 
-	public void delete(BudgetTransaction obj) {
-		new DeleteTask(this).execute(obj);
+	public void delete(BudgetTransaction obj, DBChangedListener listener) {
+		new DeleteTask(this, listener).execute(obj);
 	}
 
 	private class InsertTask extends ContentChangeTask<BudgetTransaction, Void, Void> {
-		InsertTask(TransactionsDataLoader loader) { super(loader); }
+		private DBChangedListener listener = null;
+		InsertTask(TransactionsDataLoader loader, DBChangedListener listener) {
+			super(loader);
+			this.listener = listener;
+		}
 
 		@Override
 		protected Void doInBackground(BudgetTransaction... params) {
 			mDBController.insert(params[0]);
 			return (null);
 		}
+		
+		@Override
+		protected void onPostExecute(Void res) {
+			if (listener != null) {
+				listener.onDBChanged();				
+			}
+		}
 	}
 
 	private class UpdateTask extends ContentChangeTask<BudgetTransaction, Void, Void> {
-		UpdateTask(TransactionsDataLoader loader) { super(loader); }
+		private DBChangedListener listener = null;
+		UpdateTask(TransactionsDataLoader loader, DBChangedListener listener) {
+			super(loader);
+			this.listener = listener;
+		}
 
 		@Override
 		protected Void doInBackground(BudgetTransaction... params) {
@@ -64,16 +80,34 @@ public class TransactionsDataLoader extends AbstractDataLoader< List<BudgetTrans
 			
 			return (null);
 		}
+
+		@Override
+		protected void onPostExecute(Void res) {
+			if (listener != null) {
+				listener.onDBChanged();				
+			}
+		}
 	}
 
 	private class DeleteTask extends ContentChangeTask<BudgetTransaction, Void, Void> {
-		DeleteTask(TransactionsDataLoader loader) {	super(loader); }
-
+		private DBChangedListener listener = null;
+		DeleteTask(TransactionsDataLoader loader, DBChangedListener listener) {
+			super(loader);
+			this.listener = listener;
+		}
+		
 		@Override
 		protected Void doInBackground(BudgetTransaction... params) {
 			mDBController.delete(params[0]);
 			
 			return (null);
+		}
+
+		@Override
+		protected void onPostExecute(Void res) {
+			if (listener != null) {
+				listener.onDBChanged();				
+			}
 		}
 	}
 }

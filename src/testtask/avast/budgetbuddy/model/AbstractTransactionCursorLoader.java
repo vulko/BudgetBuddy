@@ -6,7 +6,7 @@ import android.support.v4.content.AsyncTaskLoader;
  
 public abstract class AbstractTransactionCursorLoader extends AsyncTaskLoader<Cursor> {
 	
-	Cursor mCursor = null;
+	Cursor mCurrentCursor = null;
 	abstract protected Cursor buildCursor();
 
 	public AbstractTransactionCursorLoader(Context context) {
@@ -23,7 +23,7 @@ public abstract class AbstractTransactionCursorLoader extends AsyncTaskLoader<Cu
 		if (cursor != null)
 			cursor.getCount();
 
-		return (cursor);
+		return cursor;
 	}
 
 	/**
@@ -39,8 +39,8 @@ public abstract class AbstractTransactionCursorLoader extends AsyncTaskLoader<Cu
 			return;
 		}
 
-		Cursor oldCursor = mCursor;
-		mCursor = newCursor;
+		Cursor oldCursor = mCurrentCursor;
+		mCurrentCursor = newCursor;
 
 		if ( isStarted() ) {
 			super.deliverResult(newCursor);
@@ -61,11 +61,11 @@ public abstract class AbstractTransactionCursorLoader extends AsyncTaskLoader<Cu
 	 */
 	@Override
 	protected void onStartLoading() {
-		if ( mCursor != null ) {
-			deliverResult(mCursor);
+		if ( mCurrentCursor != null ) {
+			deliverResult(mCurrentCursor);
 		}
 
-		if ( takeContentChanged() || mCursor == null ) {
+		if ( takeContentChanged() || mCurrentCursor == null ) {
 			forceLoad();
 		}
 	}
@@ -103,10 +103,10 @@ public abstract class AbstractTransactionCursorLoader extends AsyncTaskLoader<Cu
 		// Ensure the loader is stopped
 		onStopLoading();
 
-		if ( mCursor != null && !mCursor.isClosed() ) {
-			mCursor.close();
+		if ( mCurrentCursor != null && !mCurrentCursor.isClosed() ) {
+			mCurrentCursor.close();
 		}
 
-		mCursor = null;
+		mCurrentCursor = null;
 	}
 }

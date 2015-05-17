@@ -25,7 +25,7 @@ import android.widget.TextView;
 
 public class BudgetBuddyActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks< List<BudgetTransaction> >, BalanceUpdateListener {
 
-	private static final int LOADER_ID = 0;
+	public static final int LOADER_ID = 0;
 	private SQLiteDatabase mDatabase = null;
 	private TransactionDBController mDBController = null;
 	private DBOpenHelper mDBHelper = null;
@@ -82,8 +82,8 @@ public class BudgetBuddyActivity extends FragmentActivity implements LoaderManag
     public void onResume() {
     	super.onResume();
     	
-		// TODO: instead of restarting loader every time switch to a Notifier-Listener pattern
-		//       when data has been changed then restart, otherwise init 
+		// TODO: instead of restarting loader every time switch to a Notifier-Listener pattern,
+		//       when data has been changed then restart, otherwise init loader
     	getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
     
