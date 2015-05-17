@@ -82,6 +82,7 @@ public class BudgetBuddyActivity extends FragmentActivity implements LoaderManag
     public void onResume() {
     	super.onResume();
     	
+		etBalance.setText( "_" );
 		// TODO: instead of restarting loader every time switch to a Notifier-Listener pattern,
 		//       when data has been changed then restart, otherwise init loader
     	getSupportLoaderManager().restartLoader(LOADER_ID, null, this);

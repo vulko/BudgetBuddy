@@ -70,8 +70,8 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 		buildReplaceTask(this).execute(mDBHelper, table, nullColumnHack, values);
 	}
 
-	public void delete(String table, String whereClause, String[] whereArgs) {
-		buildDeleteTask(this).execute(mDBHelper, table, whereClause, whereArgs);
+	public void delete(String table, String whereClause, String[] whereArgs, DBChangedListener listener) {
+		buildDeleteTask(this, listener).execute(mDBHelper, table, whereClause, whereArgs);
 	}
 
 	public void execSQL(String sql, Object[] bindArgs) {
@@ -90,8 +90,8 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 		return (new ReplaceTask(loader));
 	}
 
-	protected ContentChangeTask buildDeleteTask(TransactionCursorLoader loader) {
-		return (new DeleteTask(loader));
+	protected ContentChangeTask<Object, ?, Void> buildDeleteTask(TransactionCursorLoader loader, DBChangedListener listener) {
+		return (new DeleteTask(loader, listener));
 	}
 
 	protected ContentChangeTask buildExecSQLTask(TransactionCursorLoader loader) {
@@ -112,7 +112,7 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 
 			db.getWritableDatabase().insert(table, nullColumnHack, values);
 
-			return (null);
+			return null;
 		}
 	}
 
@@ -131,7 +131,7 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 
 			db.getWritableDatabase().update(table, values, where, whereParams);
 
-			return (null);
+			return null;
 		}
 	}
 
@@ -149,13 +149,15 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 
 			db.getWritableDatabase().replace(table, nullColumnHack, values);
 
-			return (null);
+			return null;
 		}
 	}
 
-	protected static class DeleteTask extends ContentChangeTask {
-		DeleteTask(TransactionCursorLoader loader) {
+	protected static class DeleteTask extends ContentChangeTask<Object, Void, Void> {
+		private DBChangedListener listener = null;
+		DeleteTask(TransactionCursorLoader loader, DBChangedListener listener) {
 			super(loader);
+			this.listener = listener;
 		}
 
 		@Override
@@ -167,7 +169,14 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 
 			db.getWritableDatabase().delete(table, where, whereParams);
 
-			return (null);
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void res) {
+			super.onPostExecute(res);
+			if (listener != null)
+				listener.onDBChanged();
 		}
 	}
 
@@ -184,7 +193,7 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 
 			db.getWritableDatabase().execSQL(sql, bindParams);
 
-			return (null);
+			return null;
 		}
 	}
 	

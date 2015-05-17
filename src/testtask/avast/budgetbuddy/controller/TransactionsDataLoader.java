@@ -61,6 +61,7 @@ public class TransactionsDataLoader extends AbstractDataLoader< List<BudgetTrans
 		
 		@Override
 		protected void onPostExecute(Void res) {
+			super.onPostExecute(res);
 			if (listener != null) {
 				listener.onDBChanged();				
 			}
@@ -83,6 +84,7 @@ public class TransactionsDataLoader extends AbstractDataLoader< List<BudgetTrans
 
 		@Override
 		protected void onPostExecute(Void res) {
+			super.onPostExecute(res);
 			if (listener != null) {
 				listener.onDBChanged();				
 			}
@@ -105,6 +107,7 @@ public class TransactionsDataLoader extends AbstractDataLoader< List<BudgetTrans
 
 		@Override
 		protected void onPostExecute(Void res) {
+			super.onPostExecute(res);
 			if (listener != null) {
 				listener.onDBChanged();				
 			}
