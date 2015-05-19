@@ -82,8 +82,8 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 							BudgetTransaction transaction = new BudgetTransaction();
 							transaction.setAmount(Double.valueOf( newItemValueEdit.getText().toString() ));
 							transaction.setID(0);
-							transaction.setGUID("");
-							transaction.setDesc("");
+							transaction.setGUID(AppController.getInstance().getGUID());
+							transaction.setDesc("personal");
 							transaction.setDeleted(false);
 							// init with current time
 							transaction.setTimestamp(new Date().getTime());

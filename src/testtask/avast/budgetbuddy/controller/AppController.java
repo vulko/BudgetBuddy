@@ -34,9 +34,12 @@ public class AppController {
 	// TODO: this probably should be moved out of this singleton to a model,
 	//		 but since there's just 2 preferences...
 	private String mUserName = null;
-	private String mUUID = null;
+	// TODO: guid should be calculated from username
+	private String mUUID = "6ea4f8dd-382f-44a6-bc0a-91f3c6b8216b";
 	private final String USERNAME_PREF_KEY = "user";
 	private UsernameChangedListener mListener = null;
+	
+	public String getGUID() { return mUUID; }
 	
 	public boolean loginUser(Activity mAct, String user) {
 		if (mAct == null || user == null)

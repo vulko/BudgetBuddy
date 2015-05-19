@@ -17,6 +17,8 @@ import android.os.Bundle;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
@@ -172,11 +174,11 @@ public class BudgetBuddyActivity extends FragmentActivity implements
 		mDBHelper.clearDatabase(mDatabase);	
 		List<BudgetTransaction> list = mDBController.read();
 		if(list == null || list.size() == 0){
-			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 100, false, false));
-			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 200, false, false));
-			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 300, false, false));
-			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 400, false, false));
-			mDBController.insert(new BudgetTransaction("", "", new Date().getTime(), 500, false, false));
+			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "personal", new Date().getTime(), 100, false, false));
+			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "beauty", new Date().getTime(), 200, false, false));
+			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "spa", new Date().getTime(), 300, false, false));
+			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "vacation", new Date().getTime(), 400, false, false));
+			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "shopping", new Date().getTime(), 500, false, false));
 		}		
 	}
     
