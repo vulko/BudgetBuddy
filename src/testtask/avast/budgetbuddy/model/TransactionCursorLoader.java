@@ -61,8 +61,7 @@ public class TransactionCursorLoader extends AbstractTransactionCursorLoader {
 
 	public void update(String table, ContentValues values, String whereClause,
 			String[] whereArgs) {
-		buildUpdateTask(this)
-				.execute(mDBHelper, table, values, whereClause, whereArgs);
+		buildUpdateTask(this).execute(mDBHelper, table, values, whereClause, whereArgs);
 	}
 
 	public void replace(String table, String nullColumnHack,

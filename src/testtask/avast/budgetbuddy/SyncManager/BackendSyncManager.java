@@ -27,6 +27,7 @@ public class BackendSyncManager extends AsyncTask<Void, Void, Boolean> {
 	private static final String BACKEND_API_UR1 = "http://bean­keeper.appspot.com/bk";
 	
 	private SQLiteDatabase mDatabase = null;
+	private TransactionDBController dbControl = null;
 	
 	public BackendSyncManager(SQLiteDatabase db) {
 		mDatabase = db;
@@ -65,7 +66,8 @@ public class BackendSyncManager extends AsyncTask<Void, Void, Boolean> {
 				Log.e(TAG, inData.getGuid() + " | " + inData.getKind() + " | " + inData.getDate() + " | " + inData.getValue() + " | " + inData.getDeleted());
 				
 				//return true;
-				return false;
+				
+				return true;
 			} else {
 				// TODO: notify user that sync failed
 				Log.e(TAG, "Error: " + connection.getResponseMessage());
@@ -101,7 +103,9 @@ public class BackendSyncManager extends AsyncTask<Void, Void, Boolean> {
 	@Override
 	protected Boolean doInBackground(Void... params) {
 		// get all transactions that were not synched
-		TransactionDBController dbControl = new TransactionDBController(mDatabase);
+		if (dbControl == null) {
+			dbControl = new TransactionDBController(mDatabase);			
+		}
 		List<BudgetTransaction> notSyncedList = dbControl.read(TransactionDBController.COLUMN_SYNCED + "= '0'",
 															   null,
 															   "",

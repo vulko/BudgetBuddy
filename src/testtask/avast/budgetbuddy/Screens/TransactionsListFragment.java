@@ -4,10 +4,12 @@ import java.util.Date;
 import java.util.List;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.content.Loader;
@@ -39,13 +41,6 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 	private static final int LOADER_ID = 1;
     static final int INTERNAL_EMPTY_ID = 16711681;
     static final int INTERNAL_LIST_CONTAINER_ID = 16711683;
-    private static final String SQL_LITE_READ_STATEMENT = "SELECT " + TransactionDBController.COLUMN_ID
-			+ ", " + TransactionDBController.COLUMN_GUID
-			+ ", " + TransactionDBController.COLUMN_DESC
-			+ ", " + TransactionDBController.COLUMN_TIMESTAMP
-			+ ", " + TransactionDBController.COLUMN_VALUE
-			+ ", " + TransactionDBController.COLUMN_DELETED
-			+ " FROM " + TransactionDBController.TABLE_NAME + " ORDER BY " + TransactionDBController.COLUMN_TIMESTAMP;
 	
 	private SQLiteDatabase mDatabase = null;
 	private TransactionDBController mDBController = null;
@@ -78,6 +73,8 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 				builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
+						// TODO: as there's no single and nice facade for DB, use a data loader method
+						//       need to make a single and nice DB facade, instead of an AsyncLoader (TransactionsDataLoader).
 						try {
 							BudgetTransaction transaction = new BudgetTransaction();
 							transaction.setAmount(Double.valueOf( newItemValueEdit.getText().toString() ));
@@ -85,6 +82,7 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 							transaction.setGUID(AppController.getInstance().getGUID());
 							transaction.setDesc("personal");
 							transaction.setDeleted(false);
+							transaction.setSynced(false);
 							// init with current time
 							transaction.setTimestamp(new Date().getTime());
 							Loader< List<BudgetTransaction> > loader = getActivity().getSupportLoaderManager()
@@ -124,7 +122,7 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
-		mLoader = new TransactionCursorLoader(getActivity(), mDBHelper, SQL_LITE_READ_STATEMENT, null);
+		mLoader = new TransactionCursorLoader(getActivity(), mDBHelper, TransactionDBController.SQL_DONT_READ_DELETED_STATEMENT, null);
 
 		return mLoader;
 	}
@@ -193,27 +191,37 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 					builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
 						@Override
 						public void onClick(DialogInterface dialog, int which) { // ON EDIT ITEM
-							BudgetTransaction transaction = null;
 							try {
-								transaction = AppController.getInstance().getBudgetModel().getTransaction(id);
-								if (transaction != null) {
-									transaction.setAmount( Double.valueOf( newValueEdit.getText().toString() ) );
+								final double newValue = Double.valueOf(newValueEdit.getText().toString());
+
+								// TODO: this should be moved out to a DB facade
+								AsyncTask<Void, Void, List<BudgetTransaction>> task = new AsyncTask<Void, Void, List<BudgetTransaction>>() {
+									@Override
+									protected List<BudgetTransaction> doInBackground(Void... params) {
+										return mDBController.read(TransactionDBController.COLUMN_ID + "= '" + id + "'",
+			   										  			  null,
+			   										  			  "",
+			   										  			  "",
+																  "");
+									}
 									
-									Loader< List<BudgetTransaction> > loader = getActivity().getSupportLoaderManager()
-																		.getLoader(BudgetBuddyActivity.LOADER_ID);
-									TransactionsDataLoader tloader = (TransactionsDataLoader) loader;
-									tloader.update(transaction, new DBChangedListener() {									
-										@Override
-										public void onDBChanged() {
-											// resfresh loader
+									@Override
+									protected void onPostExecute(List<BudgetTransaction> list) {
+										if (list != null && list.size() > 0) {
+											// update value and mark as not synced
+											list.get(0).setAmount(newValue);
+											list.get(0).setSynced(false);
+											mDBController.update(list.get(0));
+
+											// update list of transactions
 											getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
 											mAdapter.notifyDataSetChanged();
-											// TODO: this is a workaround to update the main FragmentActivity
-											//       as after back pressed BudgetBuddyActivity.onResume is not called
+											// this will update balance value and model
 											getActivity().getSupportLoaderManager().restartLoader(BudgetBuddyActivity.LOADER_ID, null, (BudgetBuddyActivity) getActivity());
 										}
-									});
-								}
+									}
+								};
+								task.execute();
 							} catch (NumberFormatException e) {
 								// TODO: handle incorrect input
 								Toast.makeText(getActivity(), "Incorrect input type", Toast.LENGTH_LONG).show();
@@ -236,49 +244,35 @@ public class TransactionsListFragment extends ListFragment implements LoaderMana
 					builder.setMessage("Are you sure?").setTitle("Deleting transaction");
 					builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {					
 						@Override
-						public void onClick(DialogInterface dialog, int which) {						
-							// The following code wouldn't work after adding new transaction
-							// as the model is not updated from this listfragment, as it uses
-							// cursor loader... so
-							// TODO: actually there should be a single DB facade, or this list fragment
-							//       should use BudgetModel and update it, rather then updating DB and restarting CursorLoader
-							//       TransactionDataLoader provides more simple way of handling DB, as it
-							//       works with instances of BudgetTransaction class.
-							//       CursorLoader for this ListFragment works with pure SQL statements, which is
-							//       not good in OOP terms as it reduces abstraction
-							
-							/*BudgetTransaction transaction = null;
-							transaction = AppController.getInstance().getBudgetModel().getTransaction(id);
-							if (transaction != null) {
-								Loader< List<BudgetTransaction> > loader = getActivity().getSupportLoaderManager()
-																	.getLoader(BudgetBuddyActivity.LOADER_ID);
-								TransactionsDataLoader tloader = (TransactionsDataLoader) loader;
-								tloader.delete(transaction, new DBChangedListener() {									
-									@Override
-									public void onDBChanged() {
-										// resfresh loader
+						public void onClick(DialogInterface dialog, int which) {												
+							// TODO: this should be moved out to a DB facade
+							AsyncTask<Void, Void, List<BudgetTransaction>> task = new AsyncTask<Void, Void, List<BudgetTransaction>>() {
+								@Override
+								protected List<BudgetTransaction> doInBackground(Void... params) {
+									return mDBController.read(TransactionDBController.COLUMN_ID + "= '" + id + "'",
+		   										  			  null,
+		   										  			  "",
+		   										  			  "",
+															  "");
+								}
+								
+								@Override
+								protected void onPostExecute(List<BudgetTransaction> list) {
+									if (list != null && list.size() > 0) {
+										// mark as deleted and synced and syncmanager will take care of the rest
+										list.get(0).setDeleted(true);
+										list.get(0).setSynced(false);
+										mDBController.update(list.get(0));
+
+										// update list of transactions
 										getLoaderManager().restartLoader(LOADER_ID, null, TransactionsListFragment.this);
 										mAdapter.notifyDataSetChanged();
+										// this will update balance value and model
+										getActivity().getSupportLoaderManager().restartLoader(BudgetBuddyActivity.LOADER_ID, null, (BudgetBuddyActivity) getActivity());
 									}
-								});
-							}
-							*/
-							
-							// TODO: the following workaround should be replaced with a proper DB facade design
-							//       (see comments above)
-							// remove item with a direct SQLLite request, instead of using a DB AsynkTaskLoader
-							Loader<Cursor> loader = getLoaderManager().getLoader(LOADER_ID);
-							TransactionCursorLoader cloader = (TransactionCursorLoader) loader;
-							cloader.delete(TransactionDBController.TABLE_NAME,
-									TransactionDBController.COLUMN_ID + "=" + String.valueOf(id),
-									null, new DBChangedListener() {
-										@Override
-										public void onDBChanged() {
-											// TODO: this is a workaround to update the main FragmentActivity
-											//       as after back pressed BudgetBuddyActivity.onResume is not called
-											getActivity().getSupportLoaderManager().restartLoader(BudgetBuddyActivity.LOADER_ID, null, (BudgetBuddyActivity) getActivity());
-										}
-									});
+								}
+							};
+							task.execute();
 						}
 					});
 					builder.setNegativeButton("no", null);

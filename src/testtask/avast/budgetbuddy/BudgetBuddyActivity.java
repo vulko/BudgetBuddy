@@ -30,6 +30,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 
+// TODO: this is one big TODO. For all async operations need to show progress dialog!
+
 public class BudgetBuddyActivity extends FragmentActivity implements
 												LoaderManager.LoaderCallbacks< List<BudgetTransaction> >,
 												BalanceUpdateListener {
@@ -104,10 +106,10 @@ public class BudgetBuddyActivity extends FragmentActivity implements
     	super.onResume();
     	
  		etBalance.setText( "_" );
-		// TODO: instead of restarting loader every time switch to a Notifier-Listener pattern,
-		//       when data has been changed then restart, otherwise init loader
     	getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     			
+		// TODO: BackendSyncManager should be implemented as a Service, not as an AsyncTask,
+		//       Or it should be called when DB updates and need to be synced, not when Activity resumes
     	BackendSyncManager syncManager = AppController.getInstance().createSyncManager(mDatabase);
     	syncManager.execute();
     }
@@ -144,20 +146,16 @@ public class BudgetBuddyActivity extends FragmentActivity implements
 	@Override
 	public Loader<List<BudgetTransaction>> onCreateLoader(int arg0, Bundle arg1) {
 		etBalance.setText( "_" );
+		// TODO: this loads all DB rows. Should load only the ones, that are not marked for deletion
 		TransactionsDataLoader loader = new TransactionsDataLoader(this, mDBController, null, null, null, null, null);
 		return loader;
 	}
 
 	@Override
 	public void onLoadFinished(Loader<List<BudgetTransaction>> loader, List<BudgetTransaction> list) {
-		BudgetModel model = AppController.getInstance().getBudgetModel();
-		model.clear();
 		if( list != null && list.size() > 0 ) {
-			for (BudgetTransaction budgetTransaction : list) {
-				model.addTransaction(budgetTransaction);
-			}
+			AppController.getInstance().getBudgetModel().notifyBalanceUpdated();
 		}
-		model.notifyBalanceUpdated();
 	}
 
 	@Override
@@ -171,6 +169,7 @@ public class BudgetBuddyActivity extends FragmentActivity implements
 	}
 	
 	public void resetDBandInit() {
+		// TODO: this shouldn't be done on UI thread, but as long as it's just for debugging...
 		mDBHelper.clearDatabase(mDatabase);	
 		List<BudgetTransaction> list = mDBController.read();
 		if(list == null || list.size() == 0){
@@ -179,7 +178,10 @@ public class BudgetBuddyActivity extends FragmentActivity implements
 			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "spa", new Date().getTime(), 300, false, false));
 			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "vacation", new Date().getTime(), 400, false, false));
 			mDBController.insert(new BudgetTransaction(AppController.getInstance().getGUID(), "shopping", new Date().getTime(), 500, false, false));
-		}		
+		}
+		
+		// reload data
+		getSupportLoaderManager().restartLoader(LOADER_ID, null, this);		
 	}
     
 }
